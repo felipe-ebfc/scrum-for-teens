@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.env.local
+osito-sprint/
+
+# macOS metadata
+.DS_Store
+._*
+**/.DS_Store
+**/._.DS_Store
