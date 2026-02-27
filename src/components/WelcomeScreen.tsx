@@ -69,7 +69,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue }) => {
               <img 
                 src="https://d64gsuwffb70l.cloudfront.net/68cb7ad2f4237b94daaac269_1758501748670_72f18d27.png" 
                 alt="Scrum for Teens Book Cover"
-                className="relative w-16 md:w-20 h-auto rounded-lg shadow-xl border-2 border-white/30"
+                className="relative w-32 md:w-40 h-auto rounded-lg shadow-xl border-2 border-white/30"
               />
             </div>
           </div>
