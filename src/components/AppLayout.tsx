@@ -10,6 +10,8 @@ import WeeklyCalendar from './WeeklyCalendar';
 import EnhancedScrumBoard from './EnhancedScrumBoard';
 import ScrumLearning from './ScrumLearning';
 import AccountProfile from './AccountProfile';
+import AchievementsGallery from './AchievementsGallery';
+import SprintRetrospective from './SprintRetrospective';
 import Confetti from './Confetti';
 
 import { MigrationRunnerComponent } from './MigrationRunner';
@@ -20,7 +22,7 @@ import { GoalModal } from './GoalModal';
 import { useTasks } from '@/hooks/useTasks';
 import { useGoals } from '@/hooks/useGoals';
 import { useSampleTasks } from '@/hooks/useSampleTasks';
-import { Calendar, BookOpen, BarChart3, Kanban, User, LogOut, AlertCircle, X, RefreshCw } from 'lucide-react';
+import { Calendar, BookOpen, BarChart3, Kanban, User, LogOut, AlertCircle, X, RefreshCw, Trophy, ClipboardList } from 'lucide-react';
 import { Task, SprintSettings, BoardFilters } from '@/types/Task';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { calculateSprintMetrics } from '@/utils/sprintMetrics';
@@ -369,6 +371,8 @@ const AppLayout: React.FC = () => {
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'board', label: 'Scrum Board', icon: Kanban },
     { id: 'learning', label: 'Scrum Learning', icon: BookOpen },
+    { id: 'retro', label: 'Retrospective', icon: ClipboardList },
+    { id: 'achievements', label: 'Achievements', icon: Trophy },
     { id: 'account', label: 'Account', icon: User }
   ];
 
@@ -529,6 +533,16 @@ const AppLayout: React.FC = () => {
         {/* Scrum Learning */}
         <div className={activeTab === 'learning' ? '' : 'hidden'}>
           <ScrumLearning />
+        </div>
+
+        {/* Retrospective */}
+        <div className={activeTab === 'retro' ? '' : 'hidden'}>
+          <SprintRetrospective />
+        </div>
+
+        {/* Achievements */}
+        <div className={activeTab === 'achievements' ? '' : 'hidden'}>
+          <AchievementsGallery />
         </div>
 
         {/* Account */}
