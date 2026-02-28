@@ -46,6 +46,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { queuedSupabaseQuery } from '@/lib/requestQueue';
+import { useBadgeChecker } from '@/hooks/useBadgeChecker';
 
 interface Takeaway {
   id: string;
@@ -68,6 +69,7 @@ interface Chapter {
 
 const ScrumLearning: React.FC = () => {
   const { user } = useAuth();
+  const { checkBadges } = useBadgeChecker();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [expandedChapter, setExpandedChapter] = useState<number | null>(null);
 
@@ -388,6 +390,9 @@ const ScrumLearning: React.FC = () => {
       // Refresh data to show changes immediately
       console.log('Refreshing takeaways data...');
       fetchTakeaways();
+
+      // Check and award any newly earned badges (non-blocking)
+      checkBadges();
     } catch (error: any) {
       console.error('Error recording practice:', error);
       toast({

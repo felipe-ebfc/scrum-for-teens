@@ -4,9 +4,11 @@ import RetroModal from './RetroModal';
 import RetroHistory from './RetroHistory';
 import { Button } from '@/components/ui/button';
 import { Plus, Sparkles } from 'lucide-react';
+import { useBadgeChecker } from '@/hooks/useBadgeChecker';
 
 const SprintRetrospective: React.FC = () => {
   const { retros, loading, createRetro, deleteRetro } = useRetrospectives();
+  const { checkBadges } = useBadgeChecker();
   const [modalOpen, setModalOpen] = useState(false);
 
   if (loading) {
@@ -58,6 +60,8 @@ const SprintRetrospective: React.FC = () => {
         onClose={() => setModalOpen(false)}
         onSave={(data) => {
           createRetro(data);
+          // Check for newly earned badges after saving a retro (non-blocking)
+          setTimeout(() => checkBadges(), 300);
         }}
       />
     </div>

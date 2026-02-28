@@ -22,6 +22,7 @@ import { GoalModal } from './GoalModal';
 import { useTasks } from '@/hooks/useTasks';
 import { useGoals } from '@/hooks/useGoals';
 import { useSampleTasks } from '@/hooks/useSampleTasks';
+import { useBadgeChecker } from '@/hooks/useBadgeChecker';
 import { Calendar, BookOpen, BarChart3, Kanban, User, LogOut, AlertCircle, X, RefreshCw, Trophy, ClipboardList } from 'lucide-react';
 import { Task, SprintSettings, BoardFilters } from '@/types/Task';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -46,6 +47,7 @@ const AppLayout: React.FC = () => {
   const { goals, createGoal } = useGoals();
 
   const { sampleTasks } = useSampleTasks();
+  const { checkBadges } = useBadgeChecker();
   const { toast: showToast } = useToast();
   const isMobile = useIsMobile();
 
@@ -366,6 +368,17 @@ const AppLayout: React.FC = () => {
       }
     }
   }, [tasks, sprintSettings, checkSprintRollover]);
+
+  // Catch-up badge check on app load — awards any badges the user already qualifies for
+  // Runs once after the user is confirmed logged in and tasks have loaded
+  useEffect(() => {
+    if (user?.id && !tasksLoading) {
+      // Delay slightly so other fetches settle first
+      const t = setTimeout(() => checkBadges(), 1500);
+      return () => clearTimeout(t);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, tasksLoading]);
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
