@@ -70,6 +70,7 @@ interface Chapter {
 const ScrumLearning: React.FC = () => {
   const { user } = useAuth();
   const { checkBadges } = useBadgeChecker();
+  const comebackPendingRef = useRef(false);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [expandedChapter, setExpandedChapter] = useState<number | null>(null);
 
@@ -375,6 +376,27 @@ const ScrumLearning: React.FC = () => {
         console.log('Successfully created new progress record');
       }
 
+      // Detect comeback BEFORE updating streak (streak update overwrites last_practice_date)
+      let isComeback = false;
+      try {
+        const { data: preStreak } = await queuedSupabaseQuery(
+          () => supabase
+            .from('user_scrum_streaks')
+            .select('last_practice_date')
+            .eq('user_id', user.id)
+            .single(),
+          { maxRetries: 1, critical: false }
+        );
+        if (preStreak?.last_practice_date) {
+          const daysDiff = Math.floor(
+            (Date.now() - new Date(preStreak.last_practice_date).getTime()) / (1000 * 60 * 60 * 24)
+          );
+          if (daysDiff >= 3) isComeback = true;
+        }
+      } catch {
+        // non-critical
+      }
+
       // Update streak
       await updateStreak();
       
@@ -392,7 +414,8 @@ const ScrumLearning: React.FC = () => {
       fetchTakeaways();
 
       // Check and award any newly earned badges (non-blocking)
-      checkBadges();
+      // Pass 'comeback' event if user returned after 3+ day break
+      checkBadges(isComeback ? 'comeback' : undefined);
     } catch (error: any) {
       console.error('Error recording practice:', error);
       toast({
@@ -490,6 +513,14 @@ const ScrumLearning: React.FC = () => {
         <h1 className="text-4xl font-bold text-gray-800 mb-2">Scrum Learning Hub</h1>
         <p className="text-lg text-gray-600">Master Scrum concepts from the book - Your guide to crushing goals!</p>
       </div>
+
+      {/* Change 3: Achievement connection banner */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 flex items-center gap-2">
+        <Trophy className="w-4 h-4 text-yellow-600 shrink-0" />
+        <p className="text-sm text-yellow-800">
+          Practicing concepts here earns you <strong>Achievement badges</strong> and points! 🏆
+        </p>
+      </div>
       
       <div className="space-y-4">
         {chapters.map((chapter) => (
@@ -507,9 +538,15 @@ const ScrumLearning: React.FC = () => {
                     {chapter.icon}
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-gray-800">
-                      Chapter {chapter.number}
-                    </h2>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-xl font-bold text-gray-800">
+                        Chapter {chapter.number}
+                      </h2>
+                      {/* Change 3: Achievement connection callout */}
+                      <span className="text-xs text-yellow-600 flex items-center gap-1">
+                        <Trophy className="w-3 h-3" /> Counts toward achievements
+                      </span>
+                    </div>
                     <p className="text-gray-600 font-medium">{chapter.title}</p>
                   </div>
                 </div>

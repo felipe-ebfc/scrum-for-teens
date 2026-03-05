@@ -1,16 +1,20 @@
 /**
  * useBadgeChecker
  *
- * Provides a `checkBadges()` function that:
+ * Provides a `checkBadges(triggeredEvent?)` function that:
  *  1. Fetches all scrum_badges + the user's already-earned user_badges
  *  2. Calculates the user's current stats from Supabase + localStorage
  *  3. Awards (inserts into user_badges) any newly-qualified badges
  *  4. Shows a sonner toast for each newly-earned badge
  *
  * Call checkBadges() after:
- *  - A practice is recorded  (ScrumLearning)
- *  - A retrospective is saved (SprintRetrospective)
- *  - App mounts with a logged-in user (AppLayout — catch-up check)
+ *  - A practice is recorded            (ScrumLearning)
+ *  - A retrospective is saved          (SprintRetrospective)
+ *  - App mounts with a logged-in user  (AppLayout — catch-up check)
+ *
+ * Call checkBadges('early_sprint') when a sprint is created before 8 AM.
+ * Call checkBadges('perfect_sprint') when a sprint is closed at 100% velocity.
+ * 'comeback' is auto-detected from streak data when practicing.
  */
 
 import { useCallback, useRef } from 'react';
@@ -40,9 +44,16 @@ interface UserStats {
   longestStreak: number;     // from user_scrum_streaks.longest_streak
   chaptersCompleted: number; // chapters where every takeaway has been practiced
   retrosCompleted: number;   // from localStorage
+  triggeredEvents: Set<string>; // event-based easter egg badges
 }
 
-async function fetchUserStats(userId: string): Promise<UserStats> {
+async function fetchUserStats(
+  userId: string,
+  triggeredEvent?: string
+): Promise<UserStats> {
+  const triggeredEvents = new Set<string>();
+  if (triggeredEvent) triggeredEvents.add(triggeredEvent);
+
   // ── practice count ──────────────────────────────────────────────────────────
   const { data: progressRows } = await queuedSupabaseQuery(
     () =>
@@ -60,20 +71,30 @@ async function fetchUserStats(userId: string): Promise<UserStats> {
   );
   const practiceCount = practicedIds.size;
 
-  // ── streak ──────────────────────────────────────────────────────────────────
+  // ── streak + comeback detection ─────────────────────────────────────────────
   const { data: streakRow } = await queuedSupabaseQuery(
     () =>
       supabase
         .from('user_scrum_streaks')
-        .select('longest_streak')
+        .select('longest_streak, last_practice_date')
         .eq('user_id', userId)
         .single(),
     { maxRetries: 2, critical: false }
   );
   const longestStreak: number = (streakRow as any)?.longest_streak ?? 0;
 
+  // Auto-detect comeback: last practice was 3+ days ago
+  if ((streakRow as any)?.last_practice_date) {
+    const lastDate = new Date((streakRow as any).last_practice_date);
+    const daysDiff = Math.floor(
+      (Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    if (daysDiff >= 3) {
+      triggeredEvents.add('comeback');
+    }
+  }
+
   // ── chapters completed ──────────────────────────────────────────────────────
-  // We need the full takeaway list to know which chapters are "complete"
   let chaptersCompleted = 0;
   const { data: allTakeaways } = await queuedSupabaseQuery(
     () =>
@@ -84,15 +105,12 @@ async function fetchUserStats(userId: string): Promise<UserStats> {
   );
 
   if (allTakeaways && allTakeaways.length > 0) {
-    // Group takeaway IDs by chapter
     const chapterMap = new Map<number, string[]>();
     for (const t of allTakeaways as any[]) {
       const key = t.chapter_number;
       if (!chapterMap.has(key)) chapterMap.set(key, []);
       chapterMap.get(key)!.push(String(t.id));
     }
-
-    // A chapter is complete when EVERY takeaway in it has been practiced
     for (const [, ids] of chapterMap) {
       if (ids.length > 0 && ids.every((id) => practicedIds.has(id))) {
         chaptersCompleted++;
@@ -103,7 +121,7 @@ async function fetchUserStats(userId: string): Promise<UserStats> {
   // ── retros (localStorage) ───────────────────────────────────────────────────
   const retrosCompleted = getRetroCount();
 
-  return { practiceCount, longestStreak, chaptersCompleted, retrosCompleted };
+  return { practiceCount, longestStreak, chaptersCompleted, retrosCompleted, triggeredEvents };
 }
 
 function meetsRequirement(
@@ -112,10 +130,14 @@ function meetsRequirement(
   stats: UserStats
 ): boolean {
   switch (requirementType) {
-    case 'practice_count':    return stats.practiceCount    >= requirementValue;
-    case 'streak_days':       return stats.longestStreak    >= requirementValue;
+    case 'practice_count':    return stats.practiceCount     >= requirementValue;
+    case 'streak_days':       return stats.longestStreak     >= requirementValue;
     case 'chapters_completed': return stats.chaptersCompleted >= requirementValue;
-    case 'retros_completed':  return stats.retrosCompleted  >= requirementValue;
+    case 'retros_completed':  return stats.retrosCompleted   >= requirementValue;
+    // Easter egg / event-based badges
+    case 'early_sprint':      return stats.triggeredEvents.has('early_sprint');
+    case 'comeback':          return stats.triggeredEvents.has('comeback');
+    case 'perfect_sprint':    return stats.triggeredEvents.has('perfect_sprint');
     default:                  return false;
   }
 }
@@ -124,10 +146,15 @@ function meetsRequirement(
 
 export function useBadgeChecker() {
   const { user } = useAuth();
-  // Guard against concurrent checks (e.g. rapid practice submissions)
   const checkInProgressRef = useRef(false);
 
-  const checkBadges = useCallback(async () => {
+  /**
+   * @param triggeredEvent  Optional event type for easter egg badges:
+   *   'early_sprint'   — call when a sprint is created before 8 AM
+   *   'perfect_sprint' — call when a sprint closes at 100% velocity
+   *   'comeback'       — auto-detected; no need to pass explicitly
+   */
+  const checkBadges = useCallback(async (triggeredEvent?: string) => {
     if (!user?.id) return;
     if (checkInProgressRef.current) return;
 
@@ -160,8 +187,8 @@ export function useBadgeChecker() {
       );
       if (unearnedBadges.length === 0) return;
 
-      // 4. Fetch current user stats
-      const stats = await fetchUserStats(user.id);
+      // 4. Fetch current user stats (comeback auto-detected inside)
+      const stats = await fetchUserStats(user.id, triggeredEvent);
 
       // 5. Award any newly qualified badges
       const newlyEarned: any[] = [];
@@ -183,10 +210,9 @@ export function useBadgeChecker() {
       const { error: insertError } = await supabase
         .from('user_badges')
         .insert(inserts)
-        .select(); // triggers RLS check
+        .select();
 
       if (insertError) {
-        // If it's just a duplicate-key conflict, that's fine — skip silently
         if (!insertError.message?.includes('duplicate') &&
             !insertError.code?.includes('23505')) {
           console.warn('Badge insert error:', insertError.message);
@@ -205,7 +231,6 @@ export function useBadgeChecker() {
         );
       }
     } catch (err) {
-      // Badge checking is non-critical — never surface errors to the user
       console.warn('Badge check failed (non-critical):', err);
     } finally {
       checkInProgressRef.current = false;
