@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Calendar, Settings, Save, X, Trash2, AlertTriangle, Sparkles } from 'lucide-react';
 import { SprintSettings as SprintSettingsType, Task } from '@/types/Task';
 import { toast } from 'sonner';
+import { useBadgeChecker } from '@/hooks/useBadgeChecker';
 
 interface SprintSettingsProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ const SprintSettings: React.FC<SprintSettingsProps> = ({
   tasks,
   onDeleteTask
 }) => {
+  const { checkBadges } = useBadgeChecker();
   const [localSettings, setLocalSettings] = useState<SprintSettingsType>(settings);
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
@@ -38,6 +40,22 @@ const SprintSettings: React.FC<SprintSettingsProps> = ({
   };
 
   const handleStartNewSprint = () => {
+    // ── Easter egg: Early Bird ─────────────────────────────────────────────────
+    // Award if the sprint is started before 8 AM (local time)
+    if (new Date().getHours() < 8) {
+      checkBadges('early_sprint');
+    }
+
+    // ── Easter egg: Perfect Sprint ─────────────────────────────────────────────
+    // Award if the outgoing sprint had 100% velocity:
+    // all non-archived, non-backlog tasks are Done AND at least one exists.
+    const sprintTasks = tasks.filter(
+      (t) => !t.archived && t.status !== 'backlog'
+    );
+    if (sprintTasks.length > 0 && sprintTasks.every((t) => t.status === 'done')) {
+      checkBadges('perfect_sprint');
+    }
+
     // Update sprint settings with today as start date
     const newSettings: SprintSettingsType = {
       ...localSettings,
