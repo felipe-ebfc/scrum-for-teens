@@ -26,6 +26,7 @@ interface UserProgressStats {
   longestStreak: number;
   chaptersCompleted: number;
   retrosCompleted: number;
+  averageSuccessRate: number;
 }
 
 // localStorage key for retrospectives
@@ -52,6 +53,7 @@ function getProgressValue(
     case 'streak_days':        return stats.longestStreak;
     case 'chapters_completed': return stats.chaptersCompleted;
     case 'retros_completed':   return stats.retrosCompleted;
+    case 'success_rate':       return stats.averageSuccessRate;
     // Event-based easter eggs: 0 or 1 (awarded when triggered)
     case 'early_sprint':
     case 'comeback':
@@ -72,6 +74,7 @@ export default function AchievementsGallery() {
     longestStreak: 0,
     chaptersCompleted: 0,
     retrosCompleted: 0,
+    averageSuccessRate: 0,
   });
   const [loading, setLoading] = useState(true);
   const mountedRef = useRef(true);
@@ -118,7 +121,7 @@ export default function AchievementsGallery() {
       const { data: progressRows } = await queuedSupabaseQuery(
         () => supabase
           .from('user_scrum_progress')
-          .select('takeaway_id, practiced_count, chapter_number')
+          .select('takeaway_id, practiced_count, success_count, chapter_number')
           .eq('user_id', user!.id),
         { maxRetries: 2, critical: false }
       );
@@ -166,11 +169,22 @@ export default function AchievementsGallery() {
 
       if (!mountedRef.current) { fetchInProgressRef.current = false; return; }
 
+      // Compute average success rate
+      const practicedRows = (progressRows ?? []).filter((r: any) => r.practiced_count > 0);
+      const avgSuccessRate = practicedRows.length > 0
+        ? Math.round(
+            practicedRows.reduce((acc: number, r: any) => {
+              return acc + ((r.success_count ?? 0) / r.practiced_count) * 100;
+            }, 0) / practicedRows.length
+          )
+        : 0;
+
       const stats: UserProgressStats = {
         practiceCount: practicedIds.size,
         longestStreak: (streakRow as any)?.longest_streak ?? 0,
         chaptersCompleted,
         retrosCompleted: getRetroCount(),
+        averageSuccessRate: avgSuccessRate,
       };
       setUserStats(stats);
 
@@ -263,6 +277,7 @@ export default function AchievementsGallery() {
                   const isEventBased = ['early_sprint', 'comeback', 'perfect_sprint'].includes(
                     badge.requirement_type
                   );
+                  const isPercentage = badge.requirement_type?.includes('success_rate');
 
                   return (
                     <div
@@ -301,7 +316,9 @@ export default function AchievementsGallery() {
                       {!badge.earned && !isEventBased && (
                         <div className="mt-2 text-left">
                           <div className="flex justify-between text-xs text-gray-500 mb-1">
-                            <span>{currentProgress} / {badge.requirement_value}</span>
+                            <span>
+                              {currentProgress}{isPercentage ? '%' : ''} / {badge.requirement_value}{isPercentage ? '%' : ''}
+                            </span>
                             <span>{pct}%</span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-1.5">

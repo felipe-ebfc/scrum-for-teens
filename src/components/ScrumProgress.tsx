@@ -37,6 +37,7 @@ interface UserProgressStats {
   longestStreak: number;
   chaptersCompleted: number;
   retrosCompleted: number;
+  averageSuccessRate: number;
 }
 
 // localStorage key for retrospectives
@@ -62,6 +63,7 @@ function getProgressValue(
     case 'streak_days':        return stats.longestStreak;
     case 'chapters_completed': return stats.chaptersCompleted;
     case 'retros_completed':   return stats.retrosCompleted;
+    case 'success_rate':       return stats.averageSuccessRate;
     case 'early_sprint':
     case 'comeback':
     case 'perfect_sprint':
@@ -87,6 +89,7 @@ export default function ScrumProgress() {
     longestStreak: 0,
     chaptersCompleted: 0,
     retrosCompleted: 0,
+    averageSuccessRate: 0,
   });
   const [loading, setLoading] = useState(true);
   const mountedRef = useRef(true);
@@ -179,11 +182,22 @@ export default function ScrumProgress() {
 
       if (!mountedRef.current) { fetchInProgressRef.current = false; return; }
 
+      // Compute average success rate for progress bars
+      const practicedRows = (progress ?? []).filter((p: any) => p.practiced_count > 0);
+      const avgSuccessRate = practicedRows.length > 0
+        ? Math.round(
+            practicedRows.reduce((acc: number, p: any) => {
+              return acc + ((p.success_count ?? 0) / p.practiced_count) * 100;
+            }, 0) / practicedRows.length
+          )
+        : 0;
+
       const pStats: UserProgressStats = {
         practiceCount: practicedIds.size,
         longestStreak: streaks?.longest_streak ?? 0,
         chaptersCompleted,
         retrosCompleted: getRetroCount(),
+        averageSuccessRate: avgSuccessRate,
       };
       setUserProgressStats(pStats);
 
@@ -324,6 +338,7 @@ export default function ScrumProgress() {
                       const isEventBased = ['early_sprint', 'comeback', 'perfect_sprint'].includes(
                         badge.requirement_type
                       );
+                      const isPercentage = badge.requirement_type?.includes('success_rate');
 
                       return (
                         <div
@@ -363,7 +378,9 @@ export default function ScrumProgress() {
                           {!badge.earned && !isEventBased && (
                             <div className="mt-2 text-left">
                               <div className="flex justify-between text-xs text-gray-500 mb-1">
-                                <span>{currentProgress} / {badge.requirement_value}</span>
+                                <span>
+                                  {currentProgress}{isPercentage ? '%' : ''} / {badge.requirement_value}{isPercentage ? '%' : ''}
+                                </span>
                                 <span>{pct}%</span>
                               </div>
                               <div className="w-full bg-gray-200 rounded-full h-1.5">
