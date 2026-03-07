@@ -89,22 +89,7 @@ const AppLayout: React.FC = () => {
   // Determine if we should show loading screen
   const showLoadingScreen = tasksLoading && !loadingTimeout;
 
-  // Debug: Log task counts whenever they change
-  useEffect(() => {
-    console.log('📱 AppLayout: Task state updated');
-    console.log('📱 AppLayout: User tasks count:', tasks.length);
-    console.log('📱 AppLayout: Sample tasks count:', sampleTasks.length);
-    console.log('📱 AppLayout: showSampleTasks:', showSampleTasks);
-    console.log('📱 AppLayout: allTasks count:', tasks.length + (showSampleTasks ? sampleTasks.length : 0));
-
-    if (tasks.length > 0) {
-      const statusCounts = tasks.reduce((acc, task) => {
-        acc[task.status] = (acc[task.status] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-      console.log('📱 AppLayout: User tasks status distribution:', statusCounts);
-    }
-  }, [tasks, sampleTasks, showSampleTasks]);
+  // Debug logging removed for production cleanliness
 
   /**
    * Combine user tasks with sample tasks based on toggle setting
@@ -521,6 +506,9 @@ const AppLayout: React.FC = () => {
             workloadRemainingHours={workloadRemainingHours}
             workloadTotalHours={workloadTotalHours}
             workloadPercentRemaining={workloadPercentRemaining}
+            tasks={tasks}
+            sprintStartDate={sprintSettings.startDate}
+            sprintDurationDays={sprintSettings.duration}
             onNavigateToBoard={() => setActiveTab('board')}
           />
         </div>

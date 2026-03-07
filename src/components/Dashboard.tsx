@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Target, Clock, BookOpen, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SampleSprintModal from './SampleSprintModal';
+import SprintVelocityChart from './SprintVelocityChart';
 import { GoalsPage } from './GoalsPage';
 import { useLearningProgress } from '@/hooks/useLearningProgress';
+import { Task } from '@/types/Task';
 
 
 interface DashboardProps {
@@ -13,6 +15,9 @@ interface DashboardProps {
   workloadRemainingHours: number;
   workloadTotalHours: number;
   workloadPercentRemaining: number;
+  tasks: Task[];
+  sprintStartDate?: string;
+  sprintDurationDays?: number;
   onNavigateToBoard?: () => void;
 }
 
@@ -23,6 +28,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   workloadRemainingHours,
   workloadTotalHours,
   workloadPercentRemaining,
+  tasks,
+  sprintStartDate,
+  sprintDurationDays,
   onNavigateToBoard,
 }) => {
 
@@ -144,6 +152,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Sprint Velocity / Burndown Chart */}
+      <SprintVelocityChart
+        tasks={tasks}
+        sprintStartDate={sprintStartDate}
+        sprintDurationDays={sprintDurationDays}
+      />
 
       {/* Goals Section - No extra wrapper, GoalsPage handles its own layout */}
       <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">

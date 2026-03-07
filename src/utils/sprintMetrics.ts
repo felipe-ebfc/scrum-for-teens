@@ -35,7 +35,7 @@ export const getTaskDurationHours = (task: Task): number => {
  * Calculate comprehensive sprint metrics excluding sample tasks
  */
 export const calculateSprintMetrics = (tasks: Task[], includeArchived = false): SprintMetrics => {
-  console.log('📊 Calculating sprint metrics for', tasks.length, 'tasks');
+  // Sprint metrics calculation
   
   // Filter out sample tasks and archived tasks
   const userTasks = tasks.filter(task => {
@@ -106,7 +106,6 @@ export const calculateSprintMetrics = (tasks: Task[], includeArchived = false): 
     workloadPercentRemaining,
   };
   
-  console.log('📊 Sprint metrics (excluding samples):', metrics);
   return metrics;
 };
 
