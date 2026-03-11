@@ -91,10 +91,10 @@ async function fetchUserStats(
 
   // Auto-detect comeback: last practice was 3+ days ago
   if ((streakRow as any)?.last_practice_date) {
-    const lastDate = new Date((streakRow as any).last_practice_date);
-    const daysDiff = Math.floor(
-      (Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
-    );
+    const todayStr = new Date().toLocaleDateString('en-CA');
+    const todayDate = new Date(todayStr + 'T00:00:00');
+    const lastDate = new Date((streakRow as any).last_practice_date + 'T00:00:00');
+    const daysDiff = Math.round((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
     if (daysDiff >= 3) {
       triggeredEvents.add('comeback');
     }

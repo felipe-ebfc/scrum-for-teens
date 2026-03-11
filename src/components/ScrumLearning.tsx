@@ -430,8 +430,8 @@ const ScrumLearning: React.FC = () => {
     if (!user) return;
     
     try {
-      const today = new Date().toISOString().split('T')[0];
-      
+      const today = new Date().toLocaleDateString('en-CA');
+
       const { data: streak, error: streakError } = await queuedSupabaseQuery(
         () => supabase
           .from('user_scrum_streaks')
@@ -446,8 +446,9 @@ const ScrumLearning: React.FC = () => {
       }
 
       if (streak) {
-        const lastPractice = new Date(streak.last_practice_date);
-        const daysDiff = Math.floor((new Date().getTime() - lastPractice.getTime()) / (1000 * 60 * 60 * 24));
+        const todayDate = new Date(today + 'T00:00:00');
+        const lastDate = new Date(streak.last_practice_date + 'T00:00:00');
+        const daysDiff = Math.round((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
         
         let newStreak = streak.current_streak;
         if (daysDiff === 1) {
