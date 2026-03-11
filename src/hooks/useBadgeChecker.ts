@@ -44,6 +44,7 @@ interface UserStats {
   longestStreak: number;     // from user_scrum_streaks.longest_streak
   chaptersCompleted: number; // chapters where every takeaway has been practiced
   retrosCompleted: number;   // from localStorage
+  averageSuccessRate: number; // avg (success_count/practiced_count*100) across practiced concepts
   triggeredEvents: Set<string>; // event-based easter egg badges
 }
 
@@ -59,17 +60,22 @@ async function fetchUserStats(
     () =>
       supabase
         .from('user_scrum_progress')
-        .select('takeaway_id, practiced_count')
+        .select('takeaway_id, practiced_count, success_count')
         .eq('user_id', userId),
     { maxRetries: 2, critical: false }
   );
 
-  const practicedIds = new Set(
-    (progressRows ?? [])
-      .filter((r: any) => r.practiced_count > 0)
-      .map((r: any) => String(r.takeaway_id))
-  );
+  const practicedRows = (progressRows ?? []).filter((r: any) => r.practiced_count > 0);
+  const practicedIds = new Set(practicedRows.map((r: any) => String(r.takeaway_id)));
   const practiceCount = practicedIds.size;
+
+  const averageSuccessRate = practicedRows.length > 0
+    ? Math.round(
+        practicedRows.reduce((acc: number, r: any) => {
+          return acc + ((r.success_count ?? 0) / r.practiced_count) * 100;
+        }, 0) / practicedRows.length
+      )
+    : 0;
 
   // ── streak + comeback detection ─────────────────────────────────────────────
   const { data: streakRow } = await queuedSupabaseQuery(
@@ -121,7 +127,7 @@ async function fetchUserStats(
   // ── retros (localStorage) ───────────────────────────────────────────────────
   const retrosCompleted = getRetroCount();
 
-  return { practiceCount, longestStreak, chaptersCompleted, retrosCompleted, triggeredEvents };
+  return { practiceCount, longestStreak, chaptersCompleted, retrosCompleted, averageSuccessRate, triggeredEvents };
 }
 
 function meetsRequirement(
@@ -134,6 +140,7 @@ function meetsRequirement(
     case 'streak_days':       return stats.longestStreak     >= requirementValue;
     case 'chapters_completed': return stats.chaptersCompleted >= requirementValue;
     case 'retros_completed':  return stats.retrosCompleted   >= requirementValue;
+    case 'success_rate':      return stats.averageSuccessRate >= requirementValue;
     // Easter egg / event-based badges
     case 'early_sprint':      return stats.triggeredEvents.has('early_sprint');
     case 'comeback':          return stats.triggeredEvents.has('comeback');
