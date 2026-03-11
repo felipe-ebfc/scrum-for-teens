@@ -99,6 +99,20 @@ export function useVelocityData(
       }
     }
 
+    // If the sprint start is later than existing completions (e.g. sprintStartDate
+    // was reset to "today" on page reload), pull start back to include them.
+    // Cap the pull-back so the window stays within sprintDurationDays of today.
+    const completionDates = Array.from(completionsByDay.keys()).sort();
+    if (completionDates.length > 0) {
+      const earliestCompletion = new Date(completionDates[0] + 'T00:00:00');
+      if (earliestCompletion < start) {
+        const floor = new Date();
+        floor.setDate(floor.getDate() - (sprintDurationDays - 1));
+        floor.setHours(0, 0, 0, 0);
+        start = earliestCompletion < floor ? floor : earliestCompletion;
+      }
+    }
+
     // Generate data points for each day of the sprint
     const data: VelocityDataPoint[] = [];
     let cumulativeCompleted = 0;

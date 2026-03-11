@@ -53,11 +53,28 @@ const AppLayout: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  const [sprintSettings, setSprintSettings] = useState<SprintSettings>({
-    startDate: new Date().toISOString().split('T')[0],
-    duration: 7,
-    autoArchive: true
+  const [sprintSettings, setSprintSettings] = useState<SprintSettings>(() => {
+    try {
+      const saved = localStorage.getItem('scrum-teens-sprint-settings');
+      if (saved) return JSON.parse(saved) as SprintSettings;
+    } catch {
+      // ignore parse errors
+    }
+    return {
+      startDate: new Date().toISOString().split('T')[0],
+      duration: 7,
+      autoArchive: true,
+    };
   });
+
+  // Persist sprint settings across page reloads
+  useEffect(() => {
+    try {
+      localStorage.setItem('scrum-teens-sprint-settings', JSON.stringify(sprintSettings));
+    } catch {
+      // ignore storage errors
+    }
+  }, [sprintSettings]);
 
   const [filters, setFilters] = useState<BoardFilters>({
     showArchived: false
