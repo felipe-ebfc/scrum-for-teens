@@ -3,6 +3,8 @@ import { Target, Clock, BookOpen, CheckCircle2, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import SampleSprintModal from './SampleSprintModal';
 import SprintVelocityChart from './SprintVelocityChart';
+import EstimationAccuracy from './EstimationAccuracy';
+import PlanningPoker from './PlanningPoker';
 import { GoalsPage } from './GoalsPage';
 import { useLearningProgress } from '@/hooks/useLearningProgress';
 import { Task } from '@/types/Task';
@@ -19,6 +21,7 @@ interface DashboardProps {
   sprintStartDate?: string;
   sprintDurationDays?: number;
   onNavigateToBoard?: () => void;
+  onUpdateTask?: (taskId: string, updates: Partial<Task>) => Promise<boolean>;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
@@ -32,9 +35,11 @@ const Dashboard: React.FC<DashboardProps> = ({
   sprintStartDate,
   sprintDurationDays,
   onNavigateToBoard,
+  onUpdateTask,
 }) => {
 
   const [showSampleModal, setShowSampleModal] = useState(false);
+  const [showPlanningPoker, setShowPlanningPoker] = useState(false);
   const { totalChapters, completedChapters, loading: chaptersLoading } = useLearningProgress();
 
   return (
@@ -153,12 +158,22 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* Sprint Velocity / Burndown Chart */}
-      <SprintVelocityChart
-        tasks={tasks}
-        sprintStartDate={sprintStartDate}
-        sprintDurationDays={sprintDurationDays}
-      />
+      {/* Planning Poker + Sprint Burndown — side by side on desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-1">
+          <EstimationAccuracy
+            tasks={tasks}
+            onOpenPoker={() => setShowPlanningPoker(true)}
+          />
+        </div>
+        <div className="lg:col-span-2">
+          <SprintVelocityChart
+            tasks={tasks}
+            sprintStartDate={sprintStartDate}
+            sprintDurationDays={sprintDurationDays}
+          />
+        </div>
+      </div>
 
       {/* Goals Section - No extra wrapper, GoalsPage handles its own layout */}
       <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
@@ -169,6 +184,15 @@ const Dashboard: React.FC<DashboardProps> = ({
         isOpen={showSampleModal}
         onClose={() => setShowSampleModal(false)}
       />
+
+      {/* Planning Poker Modal */}
+      {showPlanningPoker && onUpdateTask && (
+        <PlanningPoker
+          tasks={tasks}
+          onUpdateTask={onUpdateTask}
+          onClose={() => setShowPlanningPoker(false)}
+        />
+      )}
     </div>
 
   );
