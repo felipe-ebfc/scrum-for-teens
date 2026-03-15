@@ -527,7 +527,6 @@ const AppLayout: React.FC = () => {
             sprintStartDate={sprintSettings.startDate}
             sprintDurationDays={sprintSettings.duration}
             onNavigateToBoard={() => setActiveTab('board')}
-            onUpdateTask={updateTask}
           />
         </div>
 
