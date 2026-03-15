@@ -70,7 +70,7 @@ const BoardFilters: React.FC<BoardFiltersProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-96 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+        <div className="absolute top-full right-0 mt-2 w-96 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
           {/* Whole panel scrolls - single scroll context, no nested scroll traps */}
           <div className="p-4 max-h-[70vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-2">
