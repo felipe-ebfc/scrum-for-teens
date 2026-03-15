@@ -87,52 +87,64 @@ const BoardFilters: React.FC<BoardFiltersProps> = ({
               </div>
             </div>
 
-            <p className="mb-4 text-sm italic text-gray-500">
-              Tip: Filters use Subject labels (not card color)
-            </p>
+            {availableTags.length === 0 && availableCategories.length === 0 ? null : (
+              <p className="mb-4 text-sm italic text-gray-500">
+                Tip: Filters use Subject labels (not card color)
+              </p>
+            )}
 
             <div className="space-y-4">
+              {availableTags.length === 0 && availableCategories.length === 0 && (
+                <p className="text-sm text-gray-500 py-1">
+                  No filters available yet — add subjects or tags to your cards to filter by them.
+                </p>
+              )}
+
               {/* SUBJECT (LABEL) - still stored in filters.category for backwards compatibility */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Subject (Label)</label>
-                <select
-                  value={filters.category || ''}
-                  onChange={(e) => onFiltersChange({ ...filters, category: e.target.value || undefined })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">All subjects</option>
-                  {availableCategories.map((subject) => (
-                    <option key={subject} value={subject}>
-                      {subject}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {availableCategories.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Subject (Label)</label>
+                  <select
+                    value={filters.category || ‘’}
+                    onChange={(e) => onFiltersChange({ ...filters, category: e.target.value || undefined })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">All subjects</option>
+                    {availableCategories.map((subject) => (
+                      <option key={subject} value={subject}>
+                        {subject}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {/* TAGS */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+              {availableTags.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
 
-                {/* Tags-only scroll area so the panel doesn’t get ridiculous */}
-                <div className="max-h-56 overflow-y-auto pr-1">
-                  <div className="flex flex-wrap gap-2">
-                    {availableTags.map((tag) => (
-                      <button
-                        key={tag}
-                        onClick={() => handleTagToggle(tag)}
-                        className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full transition-colors ${
-                          filters.tags?.includes(tag)
-                            ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
-                      >
-                        <Tag size={10} />
-                        {tag}
-                      </button>
-                    ))}
+                  {/* Tags-only scroll area so the panel doesn’t get ridiculous */}
+                  <div className="max-h-56 overflow-y-auto pr-1">
+                    <div className="flex flex-wrap gap-2">
+                      {availableTags.map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => handleTagToggle(tag)}
+                          className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full transition-colors ${
+                            filters.tags?.includes(tag)
+                              ? ‘bg-blue-100 text-blue-700 border border-blue-200’
+                              : ‘bg-gray-100 text-gray-600 hover:bg-gray-200’
+                          }`}
+                        >
+                          <Tag size={10} />
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* SHOW ARCHIVED */}
               <div className="flex items-center justify-between">
