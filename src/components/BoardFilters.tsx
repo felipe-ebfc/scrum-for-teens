@@ -6,7 +6,7 @@ interface BoardFiltersProps {
   filters: BoardFiltersType;
   onFiltersChange: (filters: BoardFiltersType) => void;
   availableTags: string[];
-  availableCategories: string[]; // We’ll treat these as Subjects/Labels in the UI
+  availableCategories: string[]; // We'll treat these as Subjects/Labels in the UI
 }
 
 const BoardFilters: React.FC<BoardFiltersProps> = ({
@@ -70,8 +70,8 @@ const BoardFilters: React.FC<BoardFiltersProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-          {/* Whole panel scrolls if needed */}
+        <div className="absolute top-full left-0 mt-2 w-96 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+          {/* Whole panel scrolls - single scroll context, no nested scroll traps */}
           <div className="p-4 max-h-[70vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-semibold text-gray-800">Filters</h3>
@@ -96,7 +96,7 @@ const BoardFilters: React.FC<BoardFiltersProps> = ({
             <div className="space-y-4">
               {availableTags.length === 0 && availableCategories.length === 0 && (
                 <p className="text-sm text-gray-500 py-1">
-                  No filters available yet — add subjects or tags to your cards to filter by them.
+                  No filters available yet - add subjects or tags to your cards to filter by them.
                 </p>
               )}
 
@@ -105,7 +105,7 @@ const BoardFilters: React.FC<BoardFiltersProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Subject (Label)</label>
                   <select
-                    value={filters.category || ‘’}
+                    value={filters.category || ''}
                     onChange={(e) => onFiltersChange({ ...filters, category: e.target.value || undefined })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
@@ -124,24 +124,22 @@ const BoardFilters: React.FC<BoardFiltersProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
 
-                  {/* Tags-only scroll area so the panel doesn’t get ridiculous */}
-                  <div className="max-h-56 overflow-y-auto pr-1">
-                    <div className="flex flex-wrap gap-2">
-                      {availableTags.map((tag) => (
-                        <button
-                          key={tag}
-                          onClick={() => handleTagToggle(tag)}
-                          className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full transition-colors ${
-                            filters.tags?.includes(tag)
-                              ? ‘bg-blue-100 text-blue-700 border border-blue-200’
-                              : ‘bg-gray-100 text-gray-600 hover:bg-gray-200’
-                          }`}
-                        >
-                          <Tag size={10} />
-                          {tag}
-                        </button>
-                      ))}
-                    </div>
+                  {/* Tags flow naturally — outer panel handles scroll if needed */}
+                  <div className="flex flex-wrap gap-2">
+                    {availableTags.map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => handleTagToggle(tag)}
+                        className={`inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-full transition-colors ${
+                          filters.tags?.includes(tag)
+                            ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        <Tag size={12} />
+                        {tag}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
