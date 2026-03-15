@@ -558,8 +558,8 @@ const EnhancedScrumBoard: React.FC<EnhancedScrumBoardProps> = ({
             </button>
           </div>
 
-          {/* Controls row - horizontal scroll on mobile if needed */}
-          <div className="flex items-center gap-2 lg:gap-4 overflow-x-auto pb-1 lg:pb-0 flex-shrink-0">
+          {/* Controls row */}
+          <div className="flex items-center gap-2 lg:gap-4 pb-1 lg:pb-0 flex-shrink-0">
             <BoardFilters
               filters={filters}
               onFiltersChange={setFilters}
