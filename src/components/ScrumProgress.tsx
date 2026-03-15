@@ -35,6 +35,7 @@ interface ProgressStats {
 interface UserProgressStats {
   practiceCount: number;
   longestStreak: number;
+  totalPracticeDays: number;
   chaptersCompleted: number;
   retrosCompleted: number;
   averageSuccessRate: number;
@@ -61,6 +62,7 @@ function getProgressValue(
   switch (requirementType) {
     case 'practice_count':     return stats.practiceCount;
     case 'streak_days':        return stats.longestStreak;
+    case 'practice_days_total': return stats.totalPracticeDays;
     case 'chapters_completed': return stats.chaptersCompleted;
     case 'retros_completed':   return stats.retrosCompleted;
     case 'success_rate':       return stats.averageSuccessRate;
@@ -87,6 +89,7 @@ export default function ScrumProgress() {
   const [userProgressStats, setUserProgressStats] = useState<UserProgressStats>({
     practiceCount: 0,
     longestStreak: 0,
+    totalPracticeDays: 0,
     chaptersCompleted: 0,
     retrosCompleted: 0,
     averageSuccessRate: 0,
@@ -125,7 +128,7 @@ export default function ScrumProgress() {
       const { data: progress } = await queuedSupabaseQuery(
         () => supabase
           .from('user_scrum_progress')
-          .select('takeaway_id, practiced_count, success_count, chapter_number')
+          .select('takeaway_id, practiced_count, success_count, chapter_number, last_practiced_at')
           .eq('user_id', user?.id),
         { maxRetries: 2, critical: false }
       );
@@ -192,9 +195,16 @@ export default function ScrumProgress() {
           )
         : 0;
 
+      const distinctPracticeDates = new Set(
+        (progress ?? [])
+          .filter((r: any) => r.last_practiced_at)
+          .map((r: any) => String(r.last_practiced_at).substring(0, 10))
+      );
+
       const pStats: UserProgressStats = {
         practiceCount: practicedIds.size,
         longestStreak: streaks?.longest_streak ?? 0,
+        totalPracticeDays: distinctPracticeDates.size,
         chaptersCompleted,
         retrosCompleted: getRetroCount(),
         averageSuccessRate: avgSuccessRate,

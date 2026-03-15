@@ -42,6 +42,7 @@ function getRetroCount(): number {
 interface UserStats {
   practiceCount: number;     // distinct takeaways practiced at least once
   longestStreak: number;     // from user_scrum_streaks.longest_streak
+  totalPracticeDays: number; // distinct calendar days the user practiced
   chaptersCompleted: number; // chapters where every takeaway has been practiced
   retrosCompleted: number;   // from localStorage
   averageSuccessRate: number; // avg (success_count/practiced_count*100) across practiced concepts
@@ -60,7 +61,7 @@ async function fetchUserStats(
     () =>
       supabase
         .from('user_scrum_progress')
-        .select('takeaway_id, practiced_count, success_count')
+        .select('takeaway_id, practiced_count, success_count, last_practiced_at')
         .eq('user_id', userId),
     { maxRetries: 2, critical: false }
   );
@@ -68,6 +69,13 @@ async function fetchUserStats(
   const practicedRows = (progressRows ?? []).filter((r: any) => r.practiced_count > 0);
   const practicedIds = new Set(practicedRows.map((r: any) => String(r.takeaway_id)));
   const practiceCount = practicedIds.size;
+
+  const distinctPracticeDates = new Set(
+    (progressRows ?? [])
+      .filter((r: any) => r.last_practiced_at)
+      .map((r: any) => String(r.last_practiced_at).substring(0, 10))
+  );
+  const totalPracticeDays = distinctPracticeDates.size;
 
   const averageSuccessRate = practicedRows.length > 0
     ? Math.round(
@@ -127,7 +135,7 @@ async function fetchUserStats(
   // ── retros (localStorage) ───────────────────────────────────────────────────
   const retrosCompleted = getRetroCount();
 
-  return { practiceCount, longestStreak, chaptersCompleted, retrosCompleted, averageSuccessRate, triggeredEvents };
+  return { practiceCount, longestStreak, totalPracticeDays, chaptersCompleted, retrosCompleted, averageSuccessRate, triggeredEvents };
 }
 
 function meetsRequirement(
@@ -138,6 +146,7 @@ function meetsRequirement(
   switch (requirementType) {
     case 'practice_count':    return stats.practiceCount     >= requirementValue;
     case 'streak_days':       return stats.longestStreak     >= requirementValue;
+    case 'practice_days_total': return stats.totalPracticeDays >= requirementValue;
     case 'chapters_completed': return stats.chaptersCompleted >= requirementValue;
     case 'retros_completed':  return stats.retrosCompleted   >= requirementValue;
     case 'success_rate':      return stats.averageSuccessRate >= requirementValue;
