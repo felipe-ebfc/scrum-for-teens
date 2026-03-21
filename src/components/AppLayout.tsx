@@ -523,9 +523,6 @@ const AppLayout: React.FC = () => {
             workloadRemainingHours={workloadRemainingHours}
             workloadTotalHours={workloadTotalHours}
             workloadPercentRemaining={workloadPercentRemaining}
-            tasks={tasks}
-            sprintStartDate={sprintSettings.startDate}
-            sprintDurationDays={sprintSettings.duration}
             onNavigateToBoard={() => setActiveTab('board')}
           />
         </div>
