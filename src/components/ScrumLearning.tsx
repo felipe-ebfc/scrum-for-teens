@@ -212,8 +212,8 @@ const ScrumLearning: React.FC = () => {
           ...item,
           practiced: progress?.practiced_count > 0,
           practice_count: progress?.practiced_count || 0,
-          success_rate: progress?.practiced_count > 0 
-            ? Math.round((progress.success_count / progress.practiced_count) * 100)
+          success_rate: progress?.practiced_count > 0
+            ? Math.round((progress.success_count / (progress.practiced_count * 2)) * 100)
             : 0
         };
         
@@ -283,8 +283,8 @@ const ScrumLearning: React.FC = () => {
         if (existing) {
           setPracticeNotes(existing.notes || '');
           // Set last practice result based on recent success rate
-          const recentSuccessRate = existing.practiced_count > 0 
-            ? (existing.success_count / existing.practiced_count) * 100 
+          const recentSuccessRate = existing.practiced_count > 0
+            ? (existing.success_count / (existing.practiced_count * 2)) * 100
             : 0;
           
           if (recentSuccessRate >= 80) {
@@ -311,7 +311,7 @@ const ScrumLearning: React.FC = () => {
 
     try {
       console.log('Submitting practice for takeaway:', practiceDialog.takeaway.id);
-      const successValue = practiceResult === 'success' ? 1 : practiceResult === 'partial' ? 0.5 : 0;
+      const successValue = practiceResult === 'success' ? 2 : practiceResult === 'partial' ? 1 : 0;
       
       // Check if progress exists
       const { data: existing, error: existingError } = await queuedSupabaseQuery(

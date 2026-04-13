@@ -45,7 +45,7 @@ interface UserStats {
   totalPracticeDays: number; // distinct calendar days the user practiced
   chaptersCompleted: number; // chapters where every takeaway has been practiced
   retrosCompleted: number;   // from localStorage
-  averageSuccessRate: number; // avg (success_count/practiced_count*100) across practiced concepts
+  averageSuccessRate: number; // avg (success_count/(practiced_count*2)*100) across practiced concepts
   triggeredEvents: Set<string>; // event-based easter egg badges
 }
 
@@ -80,7 +80,7 @@ async function fetchUserStats(
   const averageSuccessRate = practicedRows.length > 0
     ? Math.round(
         practicedRows.reduce((acc: number, r: any) => {
-          return acc + ((r.success_count ?? 0) / r.practiced_count) * 100;
+          return acc + ((r.success_count ?? 0) / (r.practiced_count * 2)) * 100;
         }, 0) / practicedRows.length
       )
     : 0;

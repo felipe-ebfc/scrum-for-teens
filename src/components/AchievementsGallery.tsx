@@ -177,7 +177,7 @@ export default function AchievementsGallery() {
       const avgSuccessRate = practicedRows.length > 0
         ? Math.round(
             practicedRows.reduce((acc: number, r: any) => {
-              return acc + ((r.success_count ?? 0) / r.practiced_count) * 100;
+              return acc + ((r.success_count ?? 0) / (r.practiced_count * 2)) * 100;
             }, 0) / practicedRows.length
           )
         : 0;

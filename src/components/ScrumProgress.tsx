@@ -190,7 +190,7 @@ export default function ScrumProgress() {
       const avgSuccessRate = practicedRows.length > 0
         ? Math.round(
             practicedRows.reduce((acc: number, p: any) => {
-              return acc + ((p.success_count ?? 0) / p.practiced_count) * 100;
+              return acc + ((p.success_count ?? 0) / (p.practiced_count * 2)) * 100;
             }, 0) / practicedRows.length
           )
         : 0;
@@ -215,7 +215,7 @@ export default function ScrumProgress() {
       if (progress && progress.length > 0) {
         const totalPracticed = progress.filter((p: any) => p.practiced_count > 0).length;
         const avgSuccess = progress.reduce((acc: number, p: any) => {
-          const rate = p.practiced_count > 0 ? (p.success_count / p.practiced_count) * 100 : 0;
+          const rate = p.practiced_count > 0 ? (p.success_count / (p.practiced_count * 2)) * 100 : 0;
           return acc + rate;
         }, 0) / (totalPracticed || 1);
 
